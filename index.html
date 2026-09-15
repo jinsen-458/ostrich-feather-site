@@ -454,7 +454,12 @@
                         <label class="block text-sm mb-1">Requirements (ply, color, quantity…)</label>
                         <textarea id="inqReq" rows="4" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
                     </div>
-                    <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-[#80542a] transition">Send Inquiry</button>
+                    <div class="flex flex-col gap-3">
+                        <button type="button" id="whatsappSend" class="whatsapp-btn justify-center text-base py-3 w-full">
+                            <i class="fa fa-whatsapp"></i> Send via WhatsApp
+                        </button>
+                        <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-[#80542a] transition">Submit via Email</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -499,25 +504,62 @@
         });
     });
 
-    // 联系表单：提交后跳转 WhatsApp 并带上客户填写的内容
-    document.getElementById('inquiryForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const name = document.getElementById('inqName').value.trim();
-        const contact = document.getElementById('inqContact').value.trim();
-        const req = document.getElementById('inqReq').value.trim();
-        if (!req) {
+    // 读取表单字段
+    function getInquiry() {
+        return {
+            name: document.getElementById('inqName').value.trim(),
+            contact: document.getElementById('inqContact').value.trim(),
+            requirements: document.getElementById('inqReq').value.trim()
+        };
+    }
+
+    // 按钮一：通过 WhatsApp 发送
+    document.getElementById('whatsappSend').addEventListener('click', function () {
+        const d = getInquiry();
+        if (!d.requirements) {
             alert('Please fill in your requirements first.');
             return;
         }
         const msg = [
             'Hello, I would like to inquire about ostrich feathers.',
             '',
-            'Name: ' + (name || '-'),
-            'Contact: ' + (contact || '-'),
-            'Requirements: ' + req
+            'Name: ' + (d.name || '-'),
+            'Contact: ' + (d.contact || '-'),
+            'Requirements: ' + d.requirements
         ].join('\n');
-        const url = 'https://wa.me/8619169606551?text=' + encodeURIComponent(msg);
-        window.open(url, '_blank');
+        window.open('https://wa.me/8619169606551?text=' + encodeURIComponent(msg), '_blank');
+    });
+
+    // 按钮二：通过邮箱提交（发到 /api/lead）
+    document.getElementById('inquiryForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const d = getInquiry();
+        if (!d.requirements) {
+            alert('Please fill in your requirements first.');
+            return;
+        }
+        const btn = this.querySelector('button[type="submit"]');
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        try {
+            const res = await fetch('/api/lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(d)
+            });
+            const data = await res.json().catch(function () { return {}; });
+            if (res.ok && data.ok) {
+                alert('Thank you! Your inquiry has been sent. We will reply to you soon.');
+                this.reset();
+            } else {
+                alert('Sorry, something went wrong. Please try again, or contact us via WhatsApp.');
+            }
+        } catch (err) {
+            alert('Sorry, something went wrong. Please try again, or contact us via WhatsApp.');
+        }
+        btn.disabled = false;
+        btn.textContent = original;
     });
 </script>
 </body>
