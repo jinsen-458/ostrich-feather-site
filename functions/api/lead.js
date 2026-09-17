@@ -38,7 +38,7 @@ export async function onRequestPost({ request, env }) {
       return new Response(JSON.stringify({ ok: false, error: 'email service not configured' }), { status: 500, headers: jsonHeaders });
     }
     const toEmail = env.LEAD_EMAIL || 'changfuliu525@gmail.com';
-    const fromEmail = env.FROM_EMAIL || 'Ostrich Feather Website <onboarding@resend.dev>';
+    const fromEmail = env.FROM_EMAIL || 'Ostrich Feather Factory <noreply@ostrichfeatherfactoryliu.com>';
 
     // 4) 组装邮件正文
     const html = [
