@@ -547,6 +547,15 @@
         btn.disabled = false;
         btn.textContent = original;
     });
+
+    // 点击 WhatsApp 按钮时上报 Contact 事件
+    document.querySelectorAll('a[href*="wa.me"]').forEach(function (link) {
+        link.addEventListener('click', function () {
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Contact');
+            }
+        });
+    });
 </script>
 </body>
 </html>
